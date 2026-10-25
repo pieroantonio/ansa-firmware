@@ -102,6 +102,14 @@ def scrivi_avvio(img, offset, file):
             print('  ', dest, len(dati), 'byte')
     finally:
         fs.close()
+    fs = PyFatFS(img, offset=offset, read_only=True)    # rilettura: i file devono essere identici
+    try:
+        for dest, dati in file.items():
+            with fs.openbin(dest, 'r') as f:
+                assert f.read() == dati, 'file diverso dopo la scrittura: ' + dest
+        print('   rilettura dalla partizione: tutti i file identici')
+    finally:
+        fs.close()
 
 
 def comprimi(img, uscita):

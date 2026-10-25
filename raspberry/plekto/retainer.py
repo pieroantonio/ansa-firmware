@@ -10,6 +10,7 @@ Infine la linea diventa una sequenza di avanzamenti e pieghe per la macchina. Un
 """
 import numpy as np
 import trimesh
+import shapely
 from shapely.geometry import LineString, Point, Polygon
 from shapely.ops import substring
 
@@ -19,6 +20,7 @@ GIOCO_CONTATTO = 0.30        # mm: distanza minima tra la superficie del filo e 
 TOLL_PIEGHE = 0.10           # mm: scarto massimo tra la curva e la spezzata realizzata dalla macchina
 TRATTO_MIN = 1.5             # mm: tratto dritto minimo tra due pieghe (⚠ ipotesi, da misurare sulla testa di piega)
 ANGOLO_MIN = 1.0             # gradi: pieghe più piccole vengono unite al tratto
+ARRIVO_LIBERO = 1.0          # mm: ultimo tratto verso il punto cliccato in cui il filo può toccare il dente (fossa)
 N_RAGGI = 900
 
 
@@ -110,7 +112,33 @@ def _linea_filo(arcata, punti):
         c = np.vstack([np.array(substring(anello, b, L).coords), np.array(substring(anello, 0, a).coords)[1:]])
     if np.linalg.norm(c[0] - p1) > np.linalg.norm(c[-1] - p1):
         c = c[::-1]
-    return c, pi
+    return _arrivi(c, p1, p2, p3, seg), pi
+
+
+def _arrivi(c, p1, p2, p3, seg):
+    """Il filo finisce esattamente sui punti cliccati. Se il punto è dentro il dente (per esempio nella fossa del
+    premolare, dove si incolla) il filo lascia la superficie linguale nell'ultimo punto da cui il punto cliccato si
+    raggiunge in linea retta senza attraversare il dente, e ci arriva dritto (sopra la cresta marginale)."""
+    r = D_FILO / 2
+    albero = shapely.STRtree(shapely.linestrings(seg))
+    i3 = int(np.argmin(np.linalg.norm(c - p3, axis=1)))
+
+    def libero(a, b):
+        d = b - a
+        L = np.linalg.norm(d)
+        if L <= ARRIVO_LIBERO:
+            return True
+        tratto = LineString([a, b - d / L * ARRIVO_LIBERO]).buffer(r * 0.9)
+        return len(albero.query(tratto, predicate='intersects')) == 0
+
+    def lato(punti, fine):                      # punti: dal centro verso l'estremo
+        for k in range(len(punti) - 1, -1, -1):
+            if libero(punti[k], fine):
+                return np.vstack([punti[:k + 1], fine]) if np.linalg.norm(punti[k] - fine) > 0.05 else punti[:k + 1]
+        return np.vstack([punti, fine])
+    sinistra = lato(c[:i3 + 1][::-1], p1)[::-1]
+    destra = lato(c[i3:], p2)
+    return np.vstack([sinistra, destra[1:]])
 
 
 def _contatti(punti3d, antagonista):
@@ -185,13 +213,13 @@ def gcode(passi, nome='retainer'):
     return '\n'.join(righe) + '\n'
 
 
-def progetta(arcata, punti, antagonista=None, nome='retainer'):
+def progetta(arcata, punti, antagonista=None, nome='retainer', suggerisci=True):
     """punti: [inizio, fine, centro] in mm sulla superficie dell'arcata. Restituisce un dizionario per l'interfaccia."""
     c2, pi = _linea_filo(arcata, punti)
     p3 = pi.a_3d(c2)
     contatti, gioco_min = _contatti(p3, antagonista)
     suggerimento = None
-    if contatti:                                                   # di quanto spostare tutto il retainer?
+    if contatti and suggerisci:                                    # di quanto spostare tutto il retainer?
         g = direzione_gengivale(arcata, antagonista)
         for s in np.arange(0.25, 3.01, 0.25):
             q = np.asarray(punti, float) + g * s

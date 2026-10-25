@@ -36,7 +36,7 @@ const EN = {
   'Sposta il retainer di {s} mm verso la gengiva: spariscono i contatti.': 'Move the retainer {s} mm towards the gum to remove the contacts.',
   'Contatti anche spostando di 3 mm: cambia inclinazione (punto centrale) o accorcia il retainer.':
     'Contacts remain even after moving 3 mm: change the tilt (middle point) or shorten the retainer.',
-  'Sposta di {s} mm': 'Move {s} mm', 'Retainer inviato alla macchina': 'Retainer sent to the machine',
+  'Sposta di {s} mm': 'Move {s} mm', 'Rilascia il punto per la correzione proposta.': 'Release the point to see the proposed correction.', 'Retainer inviato alla macchina': 'Retainer sent to the machine',
   'Collegata via USB': 'Connected via USB', 'Non collegata: controlla il cavo USB': 'Not connected: check the USB cable',
   'Firmware': 'Firmware', 'Wi-Fi': 'Wi-Fi', 'Segnale': 'Signal', 'Rotella': 'Wheel', 'Acceso da': 'On for',
   'ottimo': 'excellent', 'buono': 'good', 'debole': 'weak', 'non configurato': 'not set up',

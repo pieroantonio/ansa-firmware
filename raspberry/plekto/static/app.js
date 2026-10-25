@@ -293,13 +293,57 @@ $('#ricomincia').addEventListener('click', () => stato.attivo && azzera(stato.at
 // ================================================================================================ clic sui denti
 const raggio = new THREE.Raycaster();
 let giu = null;
-tela.addEventListener('pointerdown', e => { giu = [e.clientX, e.clientY]; });
+let trascina = null;                                   // punto che si sta spostando: {lato, i}
+
+function mira(e) {
+  const r = tela.getBoundingClientRect();
+  raggio.setFromCamera(new THREE.Vector2((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1), camera);
+}
+function marcatoreSotto(e) {                           // un punto già messo sotto il puntatore?
+  const lato = stato.attivo;
+  if (!lato) return null;
+  mira(e);
+  const m = stato.oggetti[lato].children.filter(o => o.userData.indice !== undefined);
+  const colpo = raggio.intersectObjects(m)[0];
+  return colpo ? { lato, i: colpo.object.userData.indice } : null;
+}
+
+tela.addEventListener('pointerdown', e => {
+  giu = [e.clientX, e.clientY];
+  trascina = marcatoreSotto(e);
+  if (trascina) {                                      // si sposta il punto, non si ruota la vista
+    controlli.enabled = false;
+    tela.setPointerCapture(e.pointerId);
+  }
+});
+
+tela.addEventListener('pointermove', e => {
+  if (!trascina) {
+    tela.classList.toggle('sposta', !!(e.buttons === 0 && marcatoreSotto(e)));
+    return;
+  }
+  mira(e);
+  const colpo = raggio.intersectObject(stato.mesh[trascina.lato])[0];
+  if (!colpo) return;
+  stato.punti[trascina.lato][trascina.i] = colpo.point.toArray();
+  const m = stato.oggetti[trascina.lato].children.find(o => o.userData.indice === trascina.i);
+  if (m) m.position.copy(colpo.point);
+  if (stato.punti[trascina.lato].length === 3) ricalcola(trascina.lato, true);
+});
+
 tela.addEventListener('pointerup', e => {
+  if (trascina) {                                      // fine dello spostamento: calcolo completo
+    const lato = trascina.lato;
+    trascina = null;
+    controlli.enabled = true;
+    if (stato.punti[lato].length === 3) ricalcola(lato, false);
+    else disegnaPunti(lato);
+    return;
+  }
   if (!giu || Math.hypot(e.clientX - giu[0], e.clientY - giu[1]) > 4) return;   // era una rotazione
   const lato = stato.attivo;
   if (!lato || !stato.mesh[lato] || stato.punti[lato].length >= 3) return;
-  const r = tela.getBoundingClientRect();
-  raggio.setFromCamera(new THREE.Vector2((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1), camera);
+  mira(e);
   const colpo = raggio.intersectObject(stato.mesh[lato])[0];
   if (!colpo) return;
   stato.punti[lato].push(colpo.point.toArray());
@@ -307,6 +351,18 @@ tela.addEventListener('pointerup', e => {
   aggiornaPassi();
   if (stato.punti[lato].length === 3) progetta(lato);
 });
+
+// ricalcolo mentre si trascina: una richiesta alla volta, l'ultima posizione vince
+const inCalcolo = {};
+function ricalcola(lato, rapido) {
+  if (inCalcolo[lato]) { inCalcolo[lato].ancora = rapido ? 'rapido' : 'completo'; return; }
+  inCalcolo[lato] = {};
+  progetta(lato, rapido).finally(() => {
+    const ancora = inCalcolo[lato].ancora;
+    inCalcolo[lato] = null;
+    if (ancora) ricalcola(lato, ancora === 'rapido' && trascina !== null);
+  });
+}
 
 function sfera(pos, colore, r) {
   const s = new THREE.Mesh(new THREE.SphereGeometry(r, 24, 16), new THREE.MeshStandardMaterial({ color: colore, roughness: 0.3 }));
@@ -317,7 +373,11 @@ function sfera(pos, colore, r) {
 function disegnaPunti(lato) {
   const g = stato.oggetti[lato];
   g.clear();
-  stato.punti[lato].forEach((p, i) => g.add(sfera(p, COLORI_PUNTI[i], 0.45)));
+  stato.punti[lato].forEach((p, i) => {
+    const s = sfera(p, COLORI_PUNTI[i], 0.45);
+    s.userData.indice = i;                             // si può trascinare
+    g.add(s);
+  });
   const prog = stato.progetto[lato];
   if (!prog) return;
   const percorso = new THREE.CurvePath();
@@ -332,11 +392,12 @@ function disegnaPunti(lato) {
   }
 }
 
-async function progetta(lato) {
-  $('#aiutoVista').textContent = t('Calcolo del retainer…');
+async function progetta(lato, rapido = false) {
+  if (!rapido) $('#aiutoVista').textContent = t('Calcolo del retainer…');
   try {
-    stato.progetto[lato] = await api('POST', `/api/progetta/${lato}`, { punti: stato.punti[lato] });
+    stato.progetto[lato] = await api('POST', `/api/progetta/${lato}`, { punti: stato.punti[lato], rapido });
   } catch (e) {
+    if (rapido) return;                                // durante il trascinamento: si aspetta la posizione buona
     stato.progetto[lato] = null;
     avviso(e.message, 5000);
   }
@@ -363,11 +424,12 @@ function mostraVerifica() {
     es.innerHTML = `<b>${t("Nessun contatto con l'antagonista")}</b>${t('Gioco minimo {g} mm dalla superficie del filo.', { g: p.gioco_min.toFixed(2) })}`;
   } else {
     es.classList.add('male');
-    const sug = p.suggerimento.sposta_mm != null
+    const sug = !p.suggerimento ? t('Rilascia il punto per la correzione proposta.')
+      : p.suggerimento.sposta_mm != null
       ? t('Sposta il retainer di {s} mm verso la gengiva: spariscono i contatti.', { s: p.suggerimento.sposta_mm.toFixed(2) })
       : t('Contatti anche spostando di 3 mm: cambia inclinazione (punto centrale) o accorcia il retainer.');
     es.innerHTML = `<b>${t("Contatto con l'antagonista")}</b>${sug}`;
-    if (p.suggerimento.vettore) {
+    if (p.suggerimento && p.suggerimento.vettore) {
       const b = document.createElement('button');
       b.className = 'bottone primario';
       b.textContent = t('Sposta di {s} mm', { s: p.suggerimento.sposta_mm.toFixed(2) });

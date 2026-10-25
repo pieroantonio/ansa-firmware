@@ -131,7 +131,8 @@ def progetta(lato: str, corpo: dict):
     punti = corpo.get('punti')
     antagonista = arcate.get('inf' if lato == 'sup' else 'sup')
     try:
-        r = retainer.progetta(arcate[lato], punti, antagonista, 'retainer %s' % NOMI[lato])
+        r = retainer.progetta(arcate[lato], punti, antagonista, 'retainer %s' % NOMI[lato],
+                              suggerisci=not corpo.get('rapido'))      # mentre si trascina: niente proposta
     except retainer.ErroreProgetto as e:
         raise HTTPException(422, str(e))
     except Exception as e:
