@@ -26,7 +26,7 @@ static const char* const TESTI[T__N][2] = {
   {"Connesso", "Connected"},
   {"Password errata o rete assente", "Wrong password or network missing"},
   {"Salta", "Skip"},
-  {"Ansa", "Ansa"},
+  {"Menu", "Menu"},
   {"Piega", "Bend"},
   {"Carica filo", "Load wire"},
   {"Taglio PEEK", "PEEK cutting"},

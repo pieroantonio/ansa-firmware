@@ -383,6 +383,7 @@ void setup() {
   impostazioniCarica();
   collegamentoInizio();
   graficaInizio();
+  animazioneAvvio();
   inputInizio();
   linguaMostrata = imp.lingua;
   if (imp.configurato) {

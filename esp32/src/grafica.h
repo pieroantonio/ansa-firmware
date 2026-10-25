@@ -49,3 +49,6 @@ void rotellina(int cx, int cy, int r, float fase, uint32_t colore); // indicator
 void spunta(int cx, int cy, float avanzamento, uint32_t colore);    // segno di conferma animato
 void barraAiuto(const char* testo);
 void bandiera(int x, int y, int w, int h, bool italiana);         // tricolore o Union Jack con angoli arrotondati
+void logoFilo(int x, int y, int h, float frazione, float spessore, uint32_t colore);   // simbolo di Ansa (filo a omega)
+void scrittaAnsa(int x, int y, float alfa, uint32_t colore);       // scritta "ansa" (maschera 8 bit) su sfondo nero
+void animazioneAvvio();                                           // il filo si piega, poi compare "ansa" (~2 s)
