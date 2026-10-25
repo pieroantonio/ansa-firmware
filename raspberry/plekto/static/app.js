@@ -503,7 +503,7 @@ $('#luci').addEventListener('input', e => {
   clearTimeout(luciTimer);
   luciTimer = setTimeout(() => comando('luci', { v: +e.target.value }), 120);
 });
-$('#provaSuono').addEventListener('click', () => comando('suono', { hz: 1760, ms: 150 }));
+$$('#suoni button').forEach(b => b.addEventListener('click', () => comando('suono', { tipo: b.dataset.suono })));
 $('#aggEsp').addEventListener('click', () => { comando('agg'); avviso('Controllo in corso: guarda il display della macchina'); });
 $('#riavviaEsp').addEventListener('click', () => { if (confirm(t('Riavviare la macchina?'))) comando('riavvia'); });
 $$('#lingua button').forEach(b => b.addEventListener('click', async () => {

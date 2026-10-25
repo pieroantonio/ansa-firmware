@@ -1,5 +1,6 @@
 #include "grafica.h"
 #include "logo.h"
+#include "suoni.h"
 
 LGFX lcd;
 LGFX_Sprite tela(&lcd);
@@ -156,8 +157,10 @@ void animazioneAvvio() {
   const int x0 = (SCHERMO_L - (wL + gap + SCRITTA_L)) / 2, y0 = (SCHERMO_A - hL) / 2;
   const int xs = x0 + wL + gap, ys = y0 + hL * 68 / 100 - SCRITTA_BASE;    // linea di base della scritta
   uint32_t inizio = millis();
+  bool suonato = false;
   for (;;) {
     float t = (millis() - inizio) / 1000.0f;
+    if (!suonato && t > 2.15f) { suona(SUONO_AVVIO); suonato = true; }   // la melodia accompagna il giro e la scritta
     tela.fillScreen(col::sfondo);
     float giro = morbido((t - 2.2f) / 1.4f);                                       // 2. gira su se stesso
     logoFilo(x0, y0, hL, morbido(t / 2.0f), 2.3f, col::testo, giro);               // 1. il filo si piega

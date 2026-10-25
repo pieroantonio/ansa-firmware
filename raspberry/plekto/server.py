@@ -174,7 +174,7 @@ def comando_macchina(corpo: dict):
     c = corpo.get('c')
     if c not in ('luci', 'suono', 'riavvia', 'agg'):
         raise HTTPException(400, 'Comando sconosciuto')
-    if not mac.comando(c, **{k: v for k, v in corpo.items() if k in ('v', 'hz', 'ms')}):
+    if not mac.comando(c, **{k: v for k, v in corpo.items() if k in ('v', 'tipo')}):
         raise HTTPException(503, 'Macchina non collegata')
     return {'ok': True}
 

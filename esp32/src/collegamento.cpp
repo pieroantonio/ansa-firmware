@@ -4,6 +4,7 @@
 #include "impostazioni.h"
 #include "input.h"
 #include "config.h"
+#include "suoni.h"
 
 StatoRaspberry rasp;
 static String riga;
@@ -31,7 +32,8 @@ static void comando(JsonDocument& d) {
     analogWrite(PIN_LED1, luci * 255 / 100);
     analogWrite(PIN_LED2, luci * 255 / 100);
   } else if (!strcmp(c, "suono")) {
-    tone(PIN_AUDIO, d["hz"] | 1760, d["ms"] | 120);
+    const char* tipo = d["tipo"] | "fatto";            // avvio, fatto, errore
+    suona(!strcmp(tipo, "avvio") ? SUONO_AVVIO : !strcmp(tipo, "errore") ? SUONO_ERRORE : SUONO_FATTO);
   } else if (!strcmp(c, "riavvia")) {
     Serial.flush();
     delay(100);

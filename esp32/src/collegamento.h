@@ -6,7 +6,7 @@
 // Pi -> ESP32   {"t":"cfg?"}                         chiede le impostazioni
 //               {"t":"cfg", ...}                      impostazioni dal Pi: applicate solo se ver > locale
 //               {"t":"stato","wifi":true,"ip":"..."}  stato della rete del Pi (mostrato in Informazioni)
-//               {"t":"cmd","c":"luci","v":0..100}    comandi dalla pagina web: luci, suono, riavvia, agg, esp?
+//               {"t":"cmd","c":"luci","v":0..100}    comandi dalla pagina web: luci, suono (tipo: avvio/fatto/errore), riavvia, agg, esp?
 // ESP32 -> Pi   {"t":"esp","fw":..,"ip":..,"rssi":..,"s":secondi,"ano":bool,"luci":0..100}  risposta a esp?
 #pragma once
 #include <Arduino.h>

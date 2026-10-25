@@ -12,6 +12,7 @@
 #include "impostazioni.h"
 #include "input.h"
 #include "collegamento.h"
+#include "suoni.h"
 
 enum Schermata { S_LINGUA, S_RICERCA, S_RETI, S_PASSWORD, S_CONNESSIONE, S_MENU, S_INFO, S_IN_ARRIVO, S_NUOVO_FW,
                  S_ESITO_AGG };
@@ -244,10 +245,12 @@ static void disegnaConnessione() {
   if (!connessioneOk && !connessioneFallita) {
     if (WiFi.status() == WL_CONNECTED) {
       connessioneOk = true; inizioSchermata = millis();
+      suona(SUONO_FATTO);
       imp.ssid = reteScelta; imp.password = pwd; imp.configurato = true;
       impostazioniSalva();                                   // salvate e mandate al Raspberry
     } else if (t() > 15) {
       connessioneFallita = true; inizioSchermata = millis();
+      suona(SUONO_ERRORE);
     }
     rotellina(SCHERMO_L / 2, 90, 18, millis() * 0.36f, col::testo);
     tela.setTextColor(col::secondario);
@@ -341,6 +344,7 @@ static void controllaAggiornamenti(bool mostraEsito) {
     mostra();
   }
   esitoAgg = aggControlla();
+  if (mostraEsito && esitoAgg == AGG_ERRORE) suona(SUONO_ERRORE);
   if (esitoAgg == AGG_NUOVO) vai(S_NUOVO_FW);
   else if (mostraEsito) vai(S_ESITO_AGG);
 }
@@ -383,6 +387,7 @@ void setup() {
   impostazioniCarica();
   collegamentoInizio();
   graficaInizio();
+  suoniInizio();
   animazioneAvvio();
   inputInizio();
   linguaMostrata = imp.lingua;
@@ -405,7 +410,7 @@ void loop() {
     }
     if (schermata == S_NUOVO_FW) {
       if (e == EV_SINISTRA) vai(S_MENU);
-      else if (e == EV_CENTRO || e == EV_DESTRA) { if (!aggInstalla()) vai(S_MENU); }
+      else if (e == EV_CENTRO || e == EV_DESTRA) { if (!aggInstalla()) { suona(SUONO_ERRORE); vai(S_MENU); } }
       continue;
     }
     if (schermata == S_MENU && e == EV_SINISTRA) continue;
