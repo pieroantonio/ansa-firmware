@@ -48,7 +48,7 @@ void intestazione(const char* titolo, bool wifi, bool indietro) {
   tela.setFont(&fonts::FreeSansBold12pt7b);
   tela.setTextColor(col::testo);
   tela.drawString(titolo, x, 16);
-  logoFilo(SCHERMO_L - 26, 6, 21, 1.0f, 1.1f, col::testo);             // simbolo di Ansa in alto a destra
+  logoFilo(SCHERMO_L - 10 - 21 * LOGO_L / 1000, 6, 21, 1.0f, 1.1f, col::testo);   // simbolo di Plekto in alto a destra
   if (wifi) iconaWifi(SCHERMO_L - 46, 22, 3, col::secondario);
 }
 
@@ -106,8 +106,8 @@ void bandiera(int x, int y, int w, int h, bool italiana) {
   tela.drawRoundRect(x - 1, y - 1, w + 2, h + 2, 3, col::separatore);   // bordo sottile
 }
 
-// ---------------------------------------------------------------- logo di Ansa
-void logoFilo(int x, int y, int h, float frazione, float spessore, uint32_t colore) {
+// ---------------------------------------------------------------- logo di Plekto
+void logoFilo(int x, int y, int h, float frazione, float spessore, uint32_t colore, float giro) {
   // il filo si disegna dall'inizio fino a "frazione" della sua lunghezza (0..1): animazione della piega
   static float lung[LOGO_N];
   static bool pronto = false;
@@ -119,9 +119,15 @@ void logoFilo(int x, int y, int h, float frazione, float spessore, uint32_t colo
   }
   float fine = constrain(frazione, 0.0f, 1.0f) * lung[LOGO_N - 1];
   float k = h / 1000.0f;
+  // rotazione attorno all'asse verticale: la larghezza si schiaccia col coseno, il retro è un po' più scuro
+  float c = cosf(giro * TWO_PI), meta = LOGO_L / 2.0f, cx = x + meta * k;
+  if (giro != 0) {
+    float lum = 0.55f + 0.45f * fabsf(c);
+    colore = tela.color888(((colore >> 16) & 0xFF) * lum, ((colore >> 8) & 0xFF) * lum, (colore & 0xFF) * lum);
+  }
   for (int i = 1; i < LOGO_N && lung[i - 1] < fine; ++i) {
-    float ax = x + LOGO_PUNTI[i - 1][0] * k, ay = y + LOGO_PUNTI[i - 1][1] * k;
-    float bx = x + LOGO_PUNTI[i][0] * k, by = y + LOGO_PUNTI[i][1] * k;
+    float ax = cx + (LOGO_PUNTI[i - 1][0] - meta) * k * c, ay = y + LOGO_PUNTI[i - 1][1] * k;
+    float bx = cx + (LOGO_PUNTI[i][0] - meta) * k * c, by = y + LOGO_PUNTI[i][1] * k;
     if (lung[i] > fine) {                      // ultimo tratto parziale
       float u = (fine - lung[i - 1]) / (lung[i] - lung[i - 1]);
       bx = ax + (bx - ax) * u;
@@ -131,7 +137,7 @@ void logoFilo(int x, int y, int h, float frazione, float spessore, uint32_t colo
   }
 }
 
-void scrittaAnsa(int x, int y, float alfa, uint32_t colore) {
+void scrittaPlekto(int x, int y, float alfa, uint32_t colore) {
   uint8_t r = (colore >> 16) & 0xFF, g = (colore >> 8) & 0xFF, b = colore & 0xFF;
   alfa = constrain(alfa, 0.0f, 1.0f);
   for (int j = 0; j < SCRITTA_A; ++j)
@@ -146,17 +152,18 @@ void scrittaAnsa(int x, int y, float alfa, uint32_t colore) {
 static float morbido(float t) { t = constrain(t, 0.0f, 1.0f); return t * t * (3 - 2 * t); }
 
 void animazioneAvvio() {
-  const int hL = 92, wL = hL * 88 / 100, gap = 20;
+  const int hL = 92, wL = hL * LOGO_L / 1000, gap = 14;
   const int x0 = (SCHERMO_L - (wL + gap + SCRITTA_L)) / 2, y0 = (SCHERMO_A - hL) / 2;
-  const int xs = x0 + wL + gap, ys = y0 + hL * 58 / 100 - SCRITTA_A / 2;
+  const int xs = x0 + wL + gap, ys = y0 + hL * 68 / 100 - SCRITTA_BASE;    // linea di base della scritta
   uint32_t inizio = millis();
   for (;;) {
     float t = (millis() - inizio) / 1000.0f;
     tela.fillScreen(col::sfondo);
-    logoFilo(x0 - hL * 6 / 100, y0, hL, morbido(t / 1.05f), 2.3f, col::testo);   // 1. il filo si piega
-    float a = morbido((t - 1.0f) / 0.6f);                                          // 2. compare "ansa"
-    if (a > 0) scrittaAnsa(xs + (int)(8 * (1 - a)), ys, a, col::testo);
+    float giro = morbido((t - 2.2f) / 1.4f);                                       // 2. gira su se stesso
+    logoFilo(x0, y0, hL, morbido(t / 2.0f), 2.3f, col::testo, giro);               // 1. il filo si piega
+    float a = morbido((t - 3.1f) / 1.0f);                                          // 3. compare "plekto"
+    if (a > 0) scrittaPlekto(xs + (int)(8 * (1 - a)), ys, a, col::testo);
     mostra();
-    if (t > 2.3f) break;
+    if (t > 4.6f) break;
   }
 }

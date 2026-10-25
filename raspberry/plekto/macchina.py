@@ -1,4 +1,4 @@
-"""Collegamento USB (CH340) tra Raspberry Pi ed ESP32 di Ansa, in un thread del server web.
+"""Collegamento USB (CH340) tra Raspberry Pi ed ESP32 di Plekto, in un thread del server web.
 
 Protocollo: una riga JSON per messaggio, vedi firmware/esp32/src/collegamento.h.
 - Tiene allineate le impostazioni condivise (lingua, rete Wi-Fi): vince la versione più alta. Una scelta fatta
@@ -17,7 +17,7 @@ try:
 except ImportError:                                   # sul PC di sviluppo si può provare il server senza pyserial
     serial = None
 
-DATI = os.environ.get('ANSA_DATI', '/var/lib/ansa')
+DATI = os.environ.get('PLEKTO_DATI', '/var/lib/plekto')
 FILE_IMP = os.path.join(DATI, 'impostazioni.json')
 
 

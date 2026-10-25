@@ -1,4 +1,4 @@
-// Pagina web di Ansa: carica le arcate, sceglie i 3 punti del retainer, mostra il filo e controlla la macchina.
+// Pagina web di Plekto: carica le arcate, sceglie i 3 punti del retainer, mostra il filo e controlla la macchina.
 import * as THREE from 'three';
 import { STLLoader } from 'three/addons/loaders/STLLoader.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
@@ -484,4 +484,4 @@ $('#sAggiorna').addEventListener('click', async () => {
   adatta(new THREE.Vector3(0, -0.6, 0.8).normalize());
 })();
 
-window.ansa = { stato, camera, progetta, disegnaPunti, THREE };   // per le prove dalla console del browser
+window.plekto = { stato, camera, progetta, disegnaPunti, THREE };   // per le prove dalla console del browser

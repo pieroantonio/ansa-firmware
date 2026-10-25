@@ -175,7 +175,7 @@ def _pieghe(spezzata):
 def gcode(passi, nome='retainer'):
     """G-code semplice per l'interprete dell'ESP32: G1 L = avanzamento del filo, B = piega nel piano.
     La compensazione del ritorno elastico e dell'abbassamento per gravità la aggiunge la taratura (in arrivo)."""
-    righe = ['; Ansa - %s' % nome, '; filo %.4f mm, %d pieghe' % (D_FILO, sum(1 for p in passi if p['piega'])),
+    righe = ['; Plekto - %s' % nome, '; filo %.4f mm, %d pieghe' % (D_FILO, sum(1 for p in passi if p['piega'])),
              'G21', 'G91']
     for p in passi:
         righe.append('G1 L%.2f' % p['avanza'])

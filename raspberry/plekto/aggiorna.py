@@ -1,9 +1,9 @@
 """Aggiornamento del software del Raspberry da GitHub (stesso repository e stesse versioni del firmware ESP32).
 
-Il Raspberry tiene una copia git del repository pubblico in /opt/ansa. Le versioni sono i tag "vX.Y.Z".
+Il Raspberry tiene una copia git del repository pubblico in /opt/plekto. Le versioni sono i tag "vX.Y.Z".
 - controlla(): legge i tag remoti (git ls-remote, nessun download) e li confronta con la versione installata.
-- installa(): eseguito come servizio a parte (ansa-aggiorna.service, lanciato dalla pagina web) perché deve
-  riavviare il server: scarica il tag nuovo, aggiorna le librerie Python, riavvia "ansa" e controlla che risponda.
+- installa(): eseguito come servizio a parte (plekto-aggiorna.service, lanciato dalla pagina web) perché deve
+  riavviare il server: scarica il tag nuovo, aggiorna le librerie Python, riavvia "plekto" e controlla che risponda.
   Se il server nuovo non risponde entro 90 s torna alla versione di prima.
 Uso a mano:  sudo python3 aggiorna.py [controlla|installa]
 """
@@ -16,9 +16,9 @@ import time
 import urllib.request
 
 REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
-DATI = os.environ.get('ANSA_DATI', '/var/lib/ansa')
+DATI = os.environ.get('PLEKTO_DATI', '/var/lib/plekto')
 ESITO = os.path.join(DATI, 'aggiornamento.json')
-VENV_PIP = '/opt/ansa-venv/bin/pip'
+VENV_PIP = '/opt/plekto-venv/bin/pip'
 SALUTE = 'http://127.0.0.1/api/salute'
 
 
@@ -78,7 +78,7 @@ def _passa_a(rif):
     req = os.path.join(REPO, 'raspberry', 'requirements.txt')
     if os.path.exists(VENV_PIP) and os.path.exists(req):
         subprocess.run([VENV_PIP, 'install', '--quiet', '-r', req], check=True, timeout=1800)
-    subprocess.run(['systemctl', 'restart', 'ansa'], check=True, timeout=60)
+    subprocess.run(['systemctl', 'restart', 'plekto'], check=True, timeout=60)
 
 
 def installa():

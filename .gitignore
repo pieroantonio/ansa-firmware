@@ -5,6 +5,6 @@ __pycache__/
 # segreti locali: password degli aggiornamenti via Wi-Fi (OTA). Copiare esp32/segreti.ini.esempio in esp32/segreti.ini
 esp32/segreti.ini
 # copia locale di three.js scaricata da installa.sh sul Raspberry
-raspberry/ansa/static/vendor/
+raspberry/plekto/static/vendor/
 # file della release (si caricano su GitHub, non nel repository)
 release/

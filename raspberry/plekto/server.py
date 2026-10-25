@@ -1,7 +1,7 @@
-"""Server web di Ansa sul Raspberry Pi 4: progetto del retainer dal browser e controllo della macchina.
+"""Server web di Plekto sul Raspberry Pi 4: progetto del retainer dal browser e controllo della macchina.
 
-Avvio:  uvicorn server:app --host 0.0.0.0 --port 80        (dalla cartella raspberry/ansa, vedi ansa.service)
-Variabili: ANSA_DATI (cartella dei dati, default /var/lib/ansa), ANSA_PORTA (seriale ESP32, default /dev/ttyUSB0)
+Avvio:  uvicorn server:app --host 0.0.0.0 --port 80        (dalla cartella raspberry/plekto, vedi plekto.service)
+Variabili: PLEKTO_DATI (cartella dei dati, default /var/lib/plekto), PLEKTO_PORTA (seriale ESP32, default /dev/ttyUSB0)
 """
 import io
 import json
@@ -27,7 +27,7 @@ MAX_STL = 80 * 1024 * 1024
 VERSIONE = aggiorna.versione_installata()
 CDN = 'https://cdn.jsdelivr.net/npm/three@0.160.0/'        # se manca la copia locale in static/vendor
 
-mac = macchina.Macchina(os.environ.get('ANSA_PORTA', '/dev/ttyUSB0'))
+mac = macchina.Macchina(os.environ.get('PLEKTO_PORTA', '/dev/ttyUSB0'))
 arcate = {}                                                 # lato -> trimesh.Trimesh
 progetti = {}                                               # lato -> ultimo risultato
 blocco = threading.Lock()
@@ -47,7 +47,7 @@ async def avvio(app):
     yield
 
 
-app = FastAPI(title='Ansa', lifespan=avvio)
+app = FastAPI(title='Plekto', lifespan=avvio)
 
 
 @app.get('/')
@@ -201,7 +201,7 @@ def controlla_aggiornamenti():
 
 @app.post('/api/sistema/aggiorna')
 def aggiorna_sistema():
-    r = subprocess.run(['systemctl', 'start', '--no-block', 'ansa-aggiorna'], capture_output=True, text=True)
+    r = subprocess.run(['systemctl', 'start', '--no-block', 'plekto-aggiorna'], capture_output=True, text=True)
     if r.returncode != 0:
         raise HTTPException(500, r.stderr.strip() or 'Avvio aggiornamento non riuscito')
     return {'ok': True}

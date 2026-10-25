@@ -1,6 +1,6 @@
-# Ansa – firmware
+# Plekto – firmware
 
-Firmware di **Ansa**, piegafilo CNC per retainer ortodontici progettati in digitale.
+Firmware di **Plekto**, piegafilo CNC per retainer ortodontici progettati in digitale.
 
 | Cartella | Cosa contiene |
 |---|---|
@@ -13,7 +13,7 @@ Firmware di **Ansa**, piegafilo CNC per retainer ortodontici progettati in digit
 cd esp32
 copy segreti.ini.esempio segreti.ini      (poi scegliere la password OTA)
 pio run -e hw656a -t upload               via cavo USB (tenere premuto BOOT durante "Connecting...")
-pio run -e hw656a_ota -t upload           via Wi-Fi, scheda in rete locale (ansa.local)
+pio run -e hw656a_ota -t upload           via Wi-Fi, scheda in rete locale (plekto.local)
 ```
 
 ## Aggiornamenti da internet
@@ -21,7 +21,7 @@ pio run -e hw656a_ota -t upload           via Wi-Fi, scheda in rete locale (ansa
 All'accensione, appena collegata al Wi-Fi, la scheda legge `manifest.json` dall'ultima release di questo repository:
 
 ```json
-{"versione": "0.2.0", "url": "https://github.com/pieroantonio/ansa-firmware/releases/download/v0.2.0/firmware.bin",
+{"versione": "0.2.0", "url": "https://github.com/pieroantonio/plekto-firmware/releases/download/v0.2.0/firmware.bin",
  "sha256": "<impronta SHA-256 di firmware.bin>"}
 ```
 
@@ -31,8 +31,8 @@ SHA-256 e solo allora attiva il nuovo firmware. Se il nuovo firmware non parte, 
 ## Raspberry Pi 4: pagina web
 
 ```
-sudo git clone https://github.com/pieroantonio/ansa-firmware /opt/ansa
-sudo bash /opt/ansa/raspberry/installa.sh
+sudo git clone https://github.com/pieroantonio/plekto-firmware /opt/plekto
+sudo bash /opt/plekto/raspberry/installa.sh
 ```
 
 Poi aprire `http://<nome-del-raspberry>.local` da un computer dello studio:
@@ -44,6 +44,6 @@ Poi aprire `http://<nome-del-raspberry>.local` da un computer dello studio:
 - **Sistema**: aggiornamento del software del Raspberry dai tag di questo repository, con ritorno automatico alla
   versione precedente se qualcosa non parte.
 
-Prova senza scansioni: `python raspberry/ansa/prova_sintetica.py` crea due arcate sintetiche e progetta un retainer.
+Prova senza scansioni: `python raspberry/plekto/prova_sintetica.py` crea due arcate sintetiche e progetta un retainer.
 
 ⚠ Dispositivo in sviluppo per uso in studio: ogni retainer va verificato sul modello prima dell'uso clinico.

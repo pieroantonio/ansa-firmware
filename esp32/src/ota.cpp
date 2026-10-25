@@ -21,7 +21,7 @@ void otaSchermata(int percento, const char* nota) {
 }
 
 static void avvia() {
-  ArduinoOTA.setHostname("ansa");
+  ArduinoOTA.setHostname("plekto");
   ArduinoOTA.setPassword(OTA_PASSWORD);
   ArduinoOTA.onStart([]() { otaSchermata(0, tr(T_NON_SPEGNERE)); });
   ArduinoOTA.onProgress([](unsigned int fatto, unsigned int totale) {
@@ -33,7 +33,7 @@ static void avvia() {
   ArduinoOTA.onError([](ota_error_t) { otaSchermata(0, tr(T_ERRORE_OTA)); delay(1500); });
   ArduinoOTA.begin();
   // l'indirizzo va anche sulla seriale: serve al PC/Raspberry per trovare la scheda
-  Serial.printf("{\"t\":\"rete\",\"ip\":\"%s\",\"host\":\"ansa.local\"}\n", WiFi.localIP().toString().c_str());
+  Serial.printf("{\"t\":\"rete\",\"ip\":\"%s\",\"host\":\"plekto.local\"}\n", WiFi.localIP().toString().c_str());
   avviato = true;
 }
 

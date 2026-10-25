@@ -1,0 +1,8 @@
+[Unit]
+Description=Plekto - aggiornamento del software da GitHub (lanciato dalla pagina web)
+
+[Service]
+Type=oneshot
+Environment=PLEKTO_DATI=/var/lib/plekto
+ExecStart=/usr/bin/python3 /opt/plekto/raspberry/plekto/aggiorna.py installa
+TimeoutStartSec=45min
