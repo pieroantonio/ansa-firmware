@@ -418,6 +418,7 @@ void loop() {
       default: break;
     }
   }
+  if (collegamentoChiestoAggiornamento() && schermata == S_MENU) controllaAggiornamenti(true);
   // controllo automatico degli aggiornamenti: una volta per accensione, appena c'e' il Wi-Fi, solo dal menu
   static bool controllato = false;
   if (!controllato && schermata == S_MENU && WiFi.status() == WL_CONNECTED && millis() > 5000) {

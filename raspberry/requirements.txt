@@ -1,0 +1,7 @@
+fastapi>=0.110
+uvicorn>=0.29
+numpy>=1.26
+trimesh>=4.0
+shapely>=2.0
+rtree>=1.2
+pyserial>=3.5

@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ansa</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-10 -10 120 120'%3E%3Crect x='-10' y='-10' width='120' height='120' rx='26' fill='%23000'/%3E%3Cpath d='M6 100L41.1 31.4A14.5 14.5 0 1 1 58.9 31.4L94 100' fill='none' stroke='%23fff' stroke-width='9' stroke-linecap='round' stroke-linejoin='round' transform='translate(12 8) scale(.76)'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="/static/stile.css">
+<script type="importmap">
+{"imports": {"three": "/vendor/build/three.module.js", "three/addons/": "/vendor/examples/jsm/"}}
+</script>
+</head>
+<body>
+<header class="barra">
+  <div class="marchio">
+    <svg viewBox="0 -4 100 108" aria-hidden="true"><path d="M6 100L41.1 31.4A14.5 14.5 0 1 1 58.9 31.4L94 100"/></svg>
+    <span>ansa</span>
+  </div>
+  <nav class="segmenti schede" role="tablist">
+    <button role="tab" data-scheda="progetta" class="attivo">Progetta</button>
+    <button role="tab" data-scheda="macchina">Macchina</button>
+    <button role="tab" data-scheda="sistema">Sistema</button>
+  </nav>
+  <div class="stato-macchina" id="statoBarra"><i></i><span>Macchina non collegata</span></div>
+</header>
+
+<!-- ============================================================ PROGETTA -->
+<main id="progetta" class="scheda attiva">
+  <section class="vista" id="vista">
+    <canvas id="tela"></canvas>
+    <div class="suggerimento-vista" id="aiutoVista">Trascina qui gli STL delle arcate</div>
+    <div class="comandi-vista vetro">
+      <button data-vedi="sup" class="acceso">Superiore</button>
+      <button data-vedi="inf" class="acceso">Inferiore</button>
+      <span class="sep"></span>
+      <button id="vistaOcclusale">Occlusale</button>
+      <button id="vistaAdatta">Adatta</button>
+    </div>
+    <div class="trascina" id="trascina"><div>Rilascia per caricare l'arcata</div></div>
+  </section>
+
+  <aside class="pannello">
+    <div class="carta">
+      <h3><b>1</b> Arcate</h3>
+      <div class="arcate">
+        <label class="arcata" data-lato="sup">
+          <input type="file" accept=".stl" hidden>
+          <span class="titolo">Superiore</span>
+          <span class="dett">Trascina l'STL o fai clic</span>
+          <button class="togli" title="Togli">&times;</button>
+        </label>
+        <label class="arcata" data-lato="inf">
+          <input type="file" accept=".stl" hidden>
+          <span class="titolo">Inferiore</span>
+          <span class="dett">Trascina l'STL o fai clic</span>
+          <button class="togli" title="Togli">&times;</button>
+        </label>
+      </div>
+      <p class="nota">Con entrambe le arcate in occlusione Ansa controlla i contatti con l'antagonista.</p>
+    </div>
+
+    <div class="carta">
+      <h3><b>2</b> Retainer</h3>
+      <div class="segmenti pieno" id="sceltaRetainer">
+        <button data-r="sup">Superiore</button>
+        <button data-r="inf">Inferiore</button>
+        <button data-r="entrambi">Entrambi</button>
+      </div>
+    </div>
+
+    <div class="carta">
+      <h3><b>3</b> Posizione <span class="lato-attivo" id="latoAttivo"></span></h3>
+      <ol class="passi" id="passi">
+        <li><i style="--c:var(--blu)"></i>Dente di inizio</li>
+        <li><i style="--c:var(--viola)"></i>Dente di fine</li>
+        <li><i style="--c:var(--arancio)"></i>Punto centrale <small>altezza e inclinazione</small></li>
+      </ol>
+      <p class="nota">Clicca sulle superfici linguali, sopra la gengiva. Il retainer giace nel piano dei tre punti.</p>
+      <button class="link" id="ricomincia">Ricomincia</button>
+    </div>
+
+    <div class="carta" id="cartaVerifica" hidden>
+      <h3><b>4</b> Verifica</h3>
+      <div class="esito" id="esito"></div>
+      <dl class="numeri">
+        <div><dt>Lunghezza</dt><dd id="nLunghezza">–</dd></div>
+        <div><dt>Pieghe</dt><dd id="nPieghe">–</dd></div>
+        <div><dt>Scarto</dt><dd id="nScarto">–</dd></div>
+        <div><dt>Gioco</dt><dd id="nGioco">–</dd></div>
+      </dl>
+      <div class="azioni">
+        <a class="bottone secondario" id="scaricaGcode" download>Scarica G-code</a>
+        <button class="bottone primario" id="invia">Invia alla macchina</button>
+      </div>
+    </div>
+    <p class="avviso">Verificare sempre il retainer sul modello prima dell'uso clinico.</p>
+  </aside>
+</main>
+
+<!-- ============================================================ MACCHINA -->
+<main id="macchina" class="scheda">
+  <div class="griglia">
+    <div class="carta grande">
+      <div class="testa-stato">
+        <div class="icona-macchina"><svg viewBox="0 -4 100 108"><path d="M6 100L41.1 31.4A14.5 14.5 0 1 1 58.9 31.4L94 100"/></svg></div>
+        <div>
+          <h2 id="mTitolo">Ansa</h2>
+          <p id="mSotto">Non collegata</p>
+        </div>
+      </div>
+      <dl class="righe" id="mRighe"></dl>
+    </div>
+
+    <div class="carta">
+      <h3>Luci</h3>
+      <div class="cursore"><span>☼</span><input type="range" id="luci" min="0" max="100" step="5" value="0"><b id="luciVal">0 %</b></div>
+    </div>
+
+    <div class="carta">
+      <h3>Suono</h3>
+      <button class="bottone secondario" id="provaSuono">Prova il suono</button>
+    </div>
+
+    <div class="carta">
+      <h3>Lingua del display</h3>
+      <div class="segmenti pieno" id="lingua">
+        <button data-l="it">Italiano</button>
+        <button data-l="en">English</button>
+      </div>
+    </div>
+
+    <div class="carta">
+      <h3>Firmware</h3>
+      <p class="nota" id="mFirmware">–</p>
+      <button class="bottone secondario" id="aggEsp">Cerca aggiornamenti</button>
+      <p class="nota">Se c'è una versione nuova la macchina chiede conferma sul display.</p>
+    </div>
+
+    <div class="carta disattiva">
+      <h3>Movimenti <span class="etichetta">In arrivo</span></h3>
+      <div class="azioni">
+        <button class="bottone secondario" disabled>Carica filo</button>
+        <button class="bottone secondario" disabled>Azzera assi</button>
+        <button class="bottone secondario" disabled>Taglio PEEK</button>
+      </div>
+    </div>
+
+    <div class="carta">
+      <h3>Riavvio</h3>
+      <button class="bottone pericolo" id="riavviaEsp">Riavvia la macchina</button>
+    </div>
+  </div>
+</main>
+
+<!-- ============================================================ SISTEMA -->
+<main id="sistema" class="scheda">
+  <div class="griglia">
+    <div class="carta grande">
+      <h3>Software di Ansa</h3>
+      <dl class="righe" id="sRighe"></dl>
+      <div class="azioni">
+        <button class="bottone secondario" id="sControlla">Controlla aggiornamenti</button>
+        <button class="bottone primario" id="sAggiorna" hidden>Aggiorna</button>
+      </div>
+      <p class="nota" id="sNota"></p>
+    </div>
+  </div>
+</main>
+
+<div class="avviso-flottante" id="avviso" role="status"></div>
+<script type="module" src="/static/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+[Unit]
+Description=Ansa - aggiornamento del software da GitHub (lanciato dalla pagina web)
+
+[Service]
+Type=oneshot
+Environment=ANSA_DATI=/var/lib/ansa
+ExecStart=/usr/bin/python3 /opt/ansa/raspberry/ansa/aggiorna.py installa
+TimeoutStartSec=45min

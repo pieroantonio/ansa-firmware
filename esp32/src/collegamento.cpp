@@ -1,10 +1,52 @@
 #include "collegamento.h"
 #include <ArduinoJson.h>
+#include <WiFi.h>
 #include "impostazioni.h"
+#include "input.h"
+#include "config.h"
 
 StatoRaspberry rasp;
 static String riga;
 static int tastoInAttesa = -1;
+static bool chiestoAgg = false;
+static int luci = 0;
+
+static void inviaStatoEsp() {
+  JsonDocument d;
+  d["t"] = "esp";
+  d["fw"] = FW_VERSION;
+  d["ip"] = WiFi.status() == WL_CONNECTED ? WiFi.localIP().toString() : "";
+  d["rssi"] = WiFi.status() == WL_CONNECTED ? WiFi.RSSI() : 0;
+  d["s"] = millis() / 1000;
+  d["ano"] = inputRotellaPresente();
+  d["luci"] = luci;
+  serializeJson(d, Serial);
+  Serial.println();
+}
+
+static void comando(JsonDocument& d) {
+  const char* c = d["c"] | "";
+  if (!strcmp(c, "luci")) {                 // LED1 e LED2 della scheda madre, 0..100 %
+    luci = constrain((int)(d["v"] | 0), 0, 100);
+    analogWrite(PIN_LED1, luci * 255 / 100);
+    analogWrite(PIN_LED2, luci * 255 / 100);
+  } else if (!strcmp(c, "suono")) {
+    tone(PIN_AUDIO, d["hz"] | 1760, d["ms"] | 120);
+  } else if (!strcmp(c, "riavvia")) {
+    Serial.flush();
+    delay(100);
+    ESP.restart();
+  } else if (!strcmp(c, "agg")) {
+    chiestoAgg = true;
+  }
+  inviaStatoEsp();
+}
+
+bool collegamentoChiestoAggiornamento() {
+  bool b = chiestoAgg;
+  chiestoAgg = false;
+  return b;
+}
 
 void collegamentoInizio() {
   Serial.begin(115200);
@@ -48,6 +90,10 @@ static void gestisci(const String& s) {
     } else if (v < imp.versione) {     // le mie sono più recenti: gliele rimando
       collegamentoInviaImpostazioni();
     }
+  } else if (!strcmp(t, "cmd")) {
+    comando(d);
+  } else if (!strcmp(t, "esp?")) {
+    inviaStatoEsp();
   } else if (!strcmp(t, "stato")) {
     rasp.wifi = d["wifi"] | false;
     rasp.ip = (const char*)(d["ip"] | "");
