@@ -172,7 +172,7 @@ def stato_macchina():
 @app.post('/api/macchina/comando')
 def comando_macchina(corpo: dict):
     c = corpo.get('c')
-    if c not in ('luci', 'suono', 'riavvia', 'agg'):
+    if c not in ('luci', 'suono', 'riavvia', 'agg', 'lavoro', 'retainer_fatto'):   # l'azzeramento dei traguardi non è qui
         raise HTTPException(400, 'Comando sconosciuto')
     if not mac.comando(c, **{k: v for k, v in corpo.items() if k in ('v', 'tipo')}):
         raise HTTPException(503, 'Macchina non collegata')

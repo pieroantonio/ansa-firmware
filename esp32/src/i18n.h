@@ -11,7 +11,8 @@ enum TestoId : uint8_t {
   T_MENU, T_PIEGA, T_CARICA_FILO, T_TAGLIO_PEEK, T_LUCI, T_LINGUA, T_AGGIORNAMENTI, T_INFO,
   T_AIUTO_PASSWORD, T_AIUTO_LISTA, T_RETE_APERTA, T_SINCRONIZZATO, T_RASPBERRY, T_NON_COLLEGATO,
   T_IN_ARRIVO, T_AGGIORNAMENTO, T_NON_SPEGNERE, T_RIAVVIO, T_ERRORE_OTA,
-  T_NUOVO_FW, T_AIUTO_INSTALLA, T_GIA_AGGIORNATO, T_CONTROLLO_AGG, T_ERRORE_RETE, T__N
+  T_NUOVO_FW, T_AIUTO_INSTALLA, T_GIA_AGGIORNATO, T_CONTROLLO_AGG, T_ERRORE_RETE,
+  T_TRAGUARDI, T_RETAINER, T_ORE_LAVORO, T_NUOVO_TRAGUARDO, T_AIUTO_TRAGUARDI, T__N
 };
 
 static const char* const TESTI[T__N][2] = {
@@ -51,6 +52,11 @@ static const char* const TESTI[T__N][2] = {
   {"Firmware aggiornato", "Firmware up to date"},
   {"Controllo aggiornamenti...", "Checking for updates..."},
   {"Controllo non riuscito (rete?)", "Check failed (network?)"},
+  {"Traguardi", "Achievements"},
+  {"Retainer", "Retainers"},
+  {"Ore di lavoro", "Working hours"},
+  {"Nuovo traguardo", "New achievement"},
+  {"ruota: scegli la medaglia   centro: indietro", "turn: choose a medal   center: back"},
 };
 
 extern Lingua linguaCorrente;

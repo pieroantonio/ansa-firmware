@@ -22,6 +22,9 @@ SUONI = {
     'fatto': [(0.00, 1174.66, 0.9, 0.55), (0.11, 1567.98, 1.1, 0.60)],
     # errore: due note morbide che scendono (re - si bemolle), corte e smorzate
     'errore': [(0.00, 587.33, 0.35, 0.65), (0.16, 466.16, 0.55, 0.65)],
+    # traguardo (medaglia nuova): scala luminosa che sale veloce (sol do mi sol) e un do acuto che resta nell'aria
+    'traguardo': [(0.00, 783.99, 0.9, 0.40), (0.07, 1046.5, 0.9, 0.40), (0.14, 1318.51, 1.0, 0.40),
+                  (0.21, 1567.98, 1.2, 0.42), (0.30, 2093.0, 1.8, 0.50)],
 }
 ATTACCO = 0.012          # s
 ARMONICHE = [(1, 1.0, 1.0), (2, 0.28, 2.5), (3, 0.10, 4.0)]   # (multiplo, ampiezza, velocità di decadimento)

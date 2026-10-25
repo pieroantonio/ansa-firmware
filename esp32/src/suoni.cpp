@@ -17,7 +17,9 @@ static const Nota AVVIO[] = {{0.00f, 523.25f, 1.9f, 0.55f}, {0.06f, 659.26f, 1.8
                              {0.18f, 987.77f, 1.6f, 0.35f}, {0.32f, 1046.5f, 1.4f, 0.40f}};
 static const Nota FATTO[] = {{0.00f, 1174.66f, 0.9f, 0.55f}, {0.11f, 1567.98f, 1.1f, 0.60f}};
 static const Nota ERRORE[] = {{0.00f, 587.33f, 0.35f, 0.65f}, {0.16f, 466.16f, 0.55f, 0.65f}};
-static const Melodia MELODIE[] = {{AVVIO, 5, 0.865f}, {FATTO, 2, 1.262f}, {ERRORE, 2, 1.759f}};
+static const Nota TRAGUARDO[] = {{0.00f, 783.99f, 0.9f, 0.40f}, {0.07f, 1046.5f, 0.9f, 0.40f}, {0.14f, 1318.51f, 1.0f, 0.40f},
+                                 {0.21f, 1567.98f, 1.2f, 0.42f}, {0.30f, 2093.0f, 1.8f, 0.50f}};
+static const Melodia MELODIE[] = {{AVVIO, 5, 0.865f}, {FATTO, 2, 1.262f}, {ERRORE, 2, 1.759f}, {TRAGUARDO, 5, 1.492f}};
 static const float ARM_MUL[3] = {1, 2, 3}, ARM_AMP[3] = {1.0f, 0.28f, 0.10f}, ARM_VEL[3] = {1.0f, 2.5f, 4.0f};
 static const float ATTACCO = 0.012f, CODA = 0.6f, VOLUME = 0.8f;
 

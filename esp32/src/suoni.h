@@ -3,7 +3,7 @@
 #pragma once
 #include <Arduino.h>
 
-enum Suono { SUONO_AVVIO, SUONO_FATTO, SUONO_ERRORE };
+enum Suono { SUONO_AVVIO, SUONO_FATTO, SUONO_ERRORE, SUONO_TRAGUARDO };
 
 void suoniInizio();
 void suona(Suono s);

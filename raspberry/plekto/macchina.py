@@ -19,6 +19,8 @@ except ImportError:                                   # sul PC di sviluppo si pu
 
 DATI = os.environ.get('PLEKTO_DATI', '/var/lib/plekto')
 FILE_IMP = os.path.join(DATI, 'impostazioni.json')
+FILE_TRAGUARDI = os.path.join(DATI, 'traguardi.json')   # copia dei conteggi dell'ESP32: non si devono mai perdere
+CHIAVI_TRAGUARDI = ('ore_s', 'acceso_s', 'retainer', 'viste')
 
 
 def leggi_imp():
@@ -95,12 +97,40 @@ class Macchina(threading.Thread):
         self.invia(dict(d, t='cfg'))
         return d
 
+    def _traguardi(self, m):
+        """Tiene la copia dei valori più alti; se l'ESP32 riparte da valori più bassi glieli rimanda."""
+        if 'retainer' not in m:
+            return
+        try:
+            with open(FILE_TRAGUARDI, encoding='utf-8') as f:
+                copia = json.load(f)
+        except (OSError, ValueError):
+            copia = {}
+        nuova = {k: max(int(m.get(k, 0)), int(copia.get(k, 0))) for k in CHIAVI_TRAGUARDI if k != 'viste'}
+        nuova['viste'] = int(m.get('viste', 0)) | int(copia.get('viste', 0))
+        if nuova != copia:
+            os.makedirs(DATI, exist_ok=True)
+            tmp = FILE_TRAGUARDI + '.tmp'
+            with open(tmp, 'w', encoding='utf-8') as f:
+                json.dump(nuova, f)
+            os.replace(tmp, FILE_TRAGUARDI)
+        if any(int(m.get(k, 0)) < nuova[k] for k in CHIAVI_TRAGUARDI if k != 'viste') or (nuova['viste'] & ~int(m.get('viste', 0))):
+            print('# traguardi: ESP32 sotto la copia, ripristino', nuova)
+            self.comando('traguardi_ripristina', **nuova)
+
+    def azzera_traguardi(self):
+        """Solo per prove al banco: cancella la copia e azzera l'ESP32 (con la parola di conferma)."""
+        if os.path.exists(FILE_TRAGUARDI):
+            os.remove(FILE_TRAGUARDI)
+        return self.comando('traguardi_azzera', conferma='AZZERA')
+
     def _ricevuto(self, m):
         self.ultimo_msg = time.time()
         t = m.get('t')
         if t == 'esp':
             m.pop('t')
             self.esp = m
+            self._traguardi(m)
         elif t == 'cfg':
             locale = leggi_imp()
             if m.get('ver', 0) > locale.get('ver', 0):

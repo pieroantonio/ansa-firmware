@@ -483,6 +483,7 @@ async function aggiornaMacchina() {
     [t('Acceso da'), e.s ? durata(e.s) : '–'],
   ]);
   $('#mFirmware').textContent = e.fw ? t('Versione installata {v}', { v: e.fw }) : '–';
+  mostraTraguardi(e, s.lingua);
   $$('#lingua button').forEach(b => b.classList.toggle('attivo', b.dataset.l === s.lingua));
   if (document.activeElement !== $('#luci') && e.luci !== undefined) {
     $('#luci').value = e.luci;
@@ -509,6 +510,34 @@ $('#riavviaEsp').addEventListener('click', () => { if (confirm(t('Riavviare la m
 $$('#lingua button').forEach(b => b.addEventListener('click', async () => {
   try { await api('POST', '/api/impostazioni', { lingua: b.dataset.l }); aggiornaMacchina(); } catch (e) { avviso(e.message); }
 }));
+
+// ================================================================================================ traguardi
+// stesse medaglie del firmware (traguardi.cpp): retainer fatti e ore di lavoro
+const MEDAGLIE = [
+  ['r', 1, '1', 'Primo retainer', 'First retainer'], ['r', 10, '10', 'Dieci anse', 'Ten loops'],
+  ['r', 25, '25', 'Mano ferma', 'Steady hand'], ['r', 50, '50', 'Mezzo cento', 'Half a hundred'],
+  ['r', 100, '100', 'Centurione', 'Centurion'], ['r', 250, '250', 'Maestro del filo', 'Wire master'],
+  ['r', 500, '500', 'Leggenda', 'Legend'], ['r', 1000, '1k', 'Mille anse', 'Thousand loops'],
+  ['h', 1, '1h', 'Prima ora', 'First hour'], ['h', 10, '10h', 'Dieci ore', 'Ten hours'],
+  ['h', 50, '50h', 'Rodaggio finito', 'Run-in done'], ['h', 100, '100h', 'Cento ore', 'Hundred hours'],
+  ['h', 250, '250h', 'Instancabile', 'Tireless'], ['h', 500, '500h', 'Veterana', 'Veteran'],
+  ['h', 1000, '1kh', 'Mille ore', 'Thousand hours'],
+];
+const LIVELLI = ['bronzo', 'bronzo', 'argento', 'argento', 'oro', 'oro', 'platino', 'platino'];
+function mostraTraguardi(e, lingua) {
+  if (e.retainer === undefined) { $('#tgMedaglie').innerHTML = ''; return; }
+  const ore = Math.floor(e.ore_s / 3600), min = Math.floor(e.ore_s / 60) % 60;
+  $('#tgNumeri').innerHTML = [[t('Retainer fatti'), e.retainer], [t('Ore di lavoro'), `${ore} h ${String(min).padStart(2, '0')}`],
+    [t('Medaglie'), `${MEDAGLIE.filter((_, i) => e.medaglie & (1 << i)).length} / ${MEDAGLIE.length}`]]
+    .map(([a, b]) => `<div><dt>${a}</dt><dd>${b}</dd></div>`).join('');
+  const k = { r: 0, h: 0 };
+  $('#tgMedaglie').innerHTML = MEDAGLIE.map(([tipo, soglia, etich, it, en], i) => {
+    const ok = e.medaglie & (1 << i), liv = LIVELLI[k[tipo]++];
+    const v = tipo === 'r' ? e.retainer : ore;
+    return `<div class="medaglia ${ok ? 'ok ' + liv : ''}" title="${Math.min(v, soglia)} / ${soglia}"><i>${etich}</i>` +
+      `${lingua === 'en' ? en : it}<small>${Math.min(v, soglia)} / ${soglia}${tipo === 'h' ? ' h' : ''}</small></div>`;
+  }).join('');
+}
 
 // ================================================================================================ sistema
 async function caricaSistema() {

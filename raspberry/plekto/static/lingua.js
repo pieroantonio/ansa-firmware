@@ -17,6 +17,7 @@ const EN = {
   'Ricomincia': 'Start over', 'Lunghezza': 'Length', 'Pieghe': 'Bends', 'Scarto': 'Deviation', 'Gioco': 'Clearance',
   'Scarica G-code': 'Download G-code', 'Invia alla macchina': 'Send to machine',
   "Verificare sempre il retainer sul modello prima dell'uso clinico.": 'Always check the retainer on the model before clinical use.',
+  'Traguardi': 'Achievements', 'Retainer fatti': 'Retainers made', 'Ore di lavoro': 'Working hours', 'Medaglie': 'Medals',
   'Luci': 'Lights', 'Suono': 'Sound', 'Avvio': 'Start-up', 'Fatto': 'Done', 'Errore': 'Error', 'Prova il suono': 'Test sound', 'Lingua del display': 'Display language',
   'Cerca aggiornamenti': 'Check for updates', 'Se c\'è una versione nuova la macchina chiede conferma sul display.':
     'If a new version is available, the machine asks for confirmation on its display.',

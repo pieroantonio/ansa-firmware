@@ -5,6 +5,7 @@
 #include "input.h"
 #include "config.h"
 #include "suoni.h"
+#include "traguardi.h"
 
 StatoRaspberry rasp;
 static String riga;
@@ -19,6 +20,11 @@ static void inviaStatoEsp() {
   d["ip"] = WiFi.status() == WL_CONNECTED ? WiFi.localIP().toString() : "";
   d["rssi"] = WiFi.status() == WL_CONNECTED ? WiFi.RSSI() : 0;
   d["s"] = millis() / 1000;
+  d["ore_s"] = traguardiSecondiLavoro();          // traguardi: secondi di lavoro, di accensione, retainer, medaglie
+  d["acceso_s"] = traguardiSecondiAcceso();
+  d["retainer"] = traguardiRetainer();
+  d["medaglie"] = traguardiMedaglie();
+  d["viste"] = traguardiViste();
   d["ano"] = inputRotellaPresente();
   d["luci"] = luci;
   serializeJson(d, Serial);
@@ -40,6 +46,14 @@ static void comando(JsonDocument& d) {
     ESP.restart();
   } else if (!strcmp(c, "agg")) {
     chiestoAgg = true;
+  } else if (!strcmp(c, "lavoro")) {               // il lavoro di piega inizia (v 1) o finisce (v 0)
+    traguardiLavoro((d["v"] | 0) != 0);
+  } else if (!strcmp(c, "retainer_fatto")) {
+    traguardiRetainerFatto();
+  } else if (!strcmp(c, "traguardi_ripristina")) {   // copia del Raspberry: accetta solo valori più alti
+    traguardiRipristina(d["ore_s"] | 0, d["acceso_s"] | 0, d["retainer"] | 0, d["viste"] | 0);
+  } else if (!strcmp(c, "traguardi_azzera") && !strcmp(d["conferma"] | "", "AZZERA")) {
+    traguardiAzzera();
   }
   inviaStatoEsp();
 }

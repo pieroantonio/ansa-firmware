@@ -194,6 +194,17 @@ h3 b { width: 20px; height: 20px; border-radius: 50%; background: var(--testo); 
 .cursore input { flex: 1; accent-color: var(--blu); }
 .cursore b { width: 44px; text-align: right; font-weight: 500; font-variant-numeric: tabular-nums; }
 .disattiva { opacity: .6; }
+.medaglie { display: grid; grid-template-columns: repeat(8, 1fr); gap: 14px 8px; margin-top: 16px; }
+.medaglia { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; font-size: 11px; color: var(--secondario); }
+.medaglia i { width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; font-style: normal;
+  font-size: 13px; font-weight: 700; color: var(--terziario); background: var(--riempi); border: 2px solid var(--linea); }
+.medaglia.ok { color: var(--testo); }
+.medaglia.ok i { color: #1c1c1e; border: 0; box-shadow: inset 0 0 0 3px rgba(0,0,0,.18), 0 4px 12px rgba(0,0,0,.15); }
+.medaglia.bronzo i { background: radial-gradient(circle at 32% 30%, #fff 0 8%, #d9955a 22%, #8c5a2b 100%); }
+.medaglia.argento i { background: radial-gradient(circle at 32% 30%, #fff 0 8%, #d8dce3 22%, #8a8f99 100%); }
+.medaglia.oro i { background: radial-gradient(circle at 32% 30%, #fff 0 8%, #f5cf4d 22%, #a8801a 100%); }
+.medaglia.platino i { background: radial-gradient(circle at 32% 30%, #fff 0 8%, #9be7ff 22%, #3e8fb0 100%); }
+.medaglia small { font-size: 10px; color: var(--terziario); }
 .etichetta { margin-left: auto; text-transform: none; letter-spacing: 0; font-size: 11px; padding: 2px 8px; border-radius: 6px; background: var(--riempi); }
 
 .avviso-flottante {

@@ -13,9 +13,10 @@
 #include "input.h"
 #include "collegamento.h"
 #include "suoni.h"
+#include "traguardi.h"
 
 enum Schermata { S_LINGUA, S_RICERCA, S_RETI, S_PASSWORD, S_CONNESSIONE, S_MENU, S_INFO, S_IN_ARRIVO, S_NUOVO_FW,
-                 S_ESITO_AGG };
+                 S_ESITO_AGG, S_TRAGUARDI, S_MEDAGLIA };
 static void controllaAggiornamenti(bool mostraEsito);
 static Schermata schermata;
 static bool daMenu = false;              // lingua/rete aperte dal menu: alla fine si torna al menu
@@ -287,6 +288,7 @@ static void costruisciMenu() {
     {tr(T_RETE_WIFI), col::blu, "W", WiFi.status() == WL_CONNECTED ? imp.ssid : String(tr(T_NON_COLLEGATO)), -1, false},
     {tr(T_LINGUA), col::viola, "A", imp.lingua == IT ? "Italiano" : "English", -1, false},
     {tr(T_AGGIORNAMENTI), col::grigio, "U", FW_VERSION, -1, false},
+    {tr(T_TRAGUARDI), col::giallo, "*", String(traguardiRetainer()) + " / " + String(traguardiSecondiLavoro() / 3600) + " h", -1, false},
     {tr(T_INFO), col::azzurro, "i", "", -1, false},
   };
   menu.sel = s;
@@ -306,7 +308,8 @@ static void eventoMenu(Evento e) {
     case 4: daMenu = true; avviaRicerca(); break;
     case 5: daMenu = true; selLingua = imp.lingua; xLingua = selLingua * 150.0f; vai(S_LINGUA); break;
     case 6: controllaAggiornamenti(true); break;
-    case 7: vai(S_INFO); break;
+    case 7: vai(S_TRAGUARDI); break;
+    case 8: vai(S_INFO); break;
     default: vai(S_IN_ARRIVO); break;
   }
 }
@@ -372,6 +375,94 @@ static void disegnaEsitoAgg() {
   tela.drawString((String("Firmware ") + FW_VERSION).c_str(), SCHERMO_L / 2, 122);
 }
 
+// ---------------------------------------------------------------- traguardi: contatori e medaglie
+static int selMedaglia = 0;
+static int medagliaNuova = -1;
+static Schermata primaDellaMedaglia = S_MENU;
+
+static const uint32_t COLORI_LIVELLO[4][2] = {   // [livello][chiaro, scuro]: bronzo, argento, oro, platino
+  {0xD9955A, 0x8C5A2B}, {0xD8DCE3, 0x8A8F99}, {0xF5CF4D, 0xA8801A}, {0x9BE7FF, 0x3E8FB0}};
+
+static void medaglia(int cx, int cy, int r, int i, bool ottenuta, bool evidenziata) {
+  uint8_t lv = traguardiLivello(i);
+  if (evidenziata) tela.fillSmoothCircle(cx, cy, r + 4, col::blu);
+  if (ottenuta) {
+    tela.fillSmoothCircle(cx, cy, r, COLORI_LIVELLO[lv][1]);
+    tela.fillSmoothCircle(cx, cy, r - 3, COLORI_LIVELLO[lv][0]);
+    tela.fillSmoothCircle(cx - r / 3, cy - r / 3, r / 4, 0xFFFFFF);          // riflesso
+    tela.setTextColor(0x1C1C1E);
+  } else {
+    tela.fillSmoothCircle(cx, cy, r, col::evidenza);
+    tela.fillSmoothCircle(cx, cy, r - 2, col::scheda);
+    tela.setTextColor(col::secondario);
+  }
+  if (r >= 30) tela.setFont(&fonts::FreeSansBold12pt7b);
+  else tela.setFont(&fonts::Font2);
+  tela.setTextDatum(textdatum_t::middle_center);
+  tela.drawString(MEDAGLIE[i].etichetta, cx, cy + 1);
+}
+
+static String durataOre(uint32_t s) {
+  return String(s / 3600) + " h " + (s / 60 % 60 < 10 ? "0" : "") + String(s / 60 % 60);
+}
+
+static void disegnaTraguardi() {
+  intestazione(tr(T_TRAGUARDI), WiFi.status() == WL_CONNECTED, true);
+  // due riquadri con i contatori
+  const int w = (SCHERMO_L - 18) / 2;
+  const char* titoli[2] = {tr(T_RETAINER), tr(T_ORE_LAVORO)};
+  String valori[2] = {String(traguardiRetainer()), durataOre(traguardiSecondiLavoro())};
+  for (int k = 0; k < 2; ++k) {
+    int x = 6 + k * (w + 6);
+    tela.fillSmoothRoundRect(x, 34, w, 40, 8, col::scheda);
+    tela.setFont(&fonts::Font0);
+    tela.setTextColor(col::secondario);
+    tela.setTextDatum(textdatum_t::top_left);
+    tela.drawString(titoli[k], x + 8, 39);
+    tela.setFont(&fonts::FreeSansBold12pt7b);
+    tela.setTextColor(col::testo);
+    tela.setTextDatum(textdatum_t::bottom_left);
+    tela.drawString(valori[k].c_str(), x + 8, 72);
+  }
+  // medaglie: retainer sulla prima riga, ore sulla seconda
+  uint32_t ott = traguardiMedaglie();
+  int kR = 0, kO = 0;
+  for (int i = 0; i < N_MEDAGLIE; ++i) {
+    bool ore = MEDAGLIE[i].tipo == MED_ORE;
+    int k = ore ? kO++ : kR++;
+    medaglia(24 + k * 38, ore ? 130 : 96, 14, i, ott & (1UL << i), i == selMedaglia);
+  }
+  // nome e avanzamento della medaglia scelta
+  const Medaglia& m = MEDAGLIE[selMedaglia];
+  uint32_t v = m.tipo == MED_RETAINER ? traguardiRetainer() : traguardiSecondiLavoro() / 3600;
+  String riga = String(m.nome[imp.lingua]) + "   " + String(min(v, m.soglia)) + " / " + String(m.soglia) +
+                (m.tipo == MED_ORE ? " h" : "");
+  barraAiuto(riga.c_str());
+}
+
+static void eventoTraguardi(Evento e) {
+  if (e == EV_ORARIO || e == EV_DESTRA || e == EV_GIU) selMedaglia = min(selMedaglia + 1, N_MEDAGLIE - 1);
+  if (e == EV_ANTIORARIO || e == EV_SU) selMedaglia = max(selMedaglia - 1, 0);
+  if (e == EV_CENTRO || e == EV_SINISTRA) vai(S_MENU);
+}
+
+static void disegnaMedaglia() {                 // medaglia nuova: entra ingrandendosi, con il nome sotto
+  float a = constrain(t() / 0.6f, 0.0f, 1.0f);
+  a = 1 - (1 - a) * (1 - a) * (1 - a);
+  int r = 8 + (int)(30 * a);
+  tela.setFont(&fonts::FreeSans9pt7b);
+  tela.setTextColor(col::secondario);
+  tela.setTextDatum(textdatum_t::top_center);
+  tela.drawString(tr(T_NUOVO_TRAGUARDO), SCHERMO_L / 2, 8);
+  medaglia(SCHERMO_L / 2, 78, r, medagliaNuova, true, false);
+  if (t() > 0.5f) {
+    tela.setFont(&fonts::FreeSansBold12pt7b);
+    tela.setTextColor(col::testo);
+    tela.setTextDatum(textdatum_t::top_center);
+    tela.drawString(MEDAGLIE[medagliaNuova].nome[imp.lingua], SCHERMO_L / 2, 126);
+  }
+}
+
 static void disegnaInArrivo() {
   intestazione(menu.voci.size() ? menu.voci[menu.sel].testo.c_str() : "", WiFi.status() == WL_CONNECTED, true);
   tela.setFont(&fonts::FreeSans12pt7b);
@@ -385,6 +476,7 @@ static Lingua linguaMostrata;
 
 void setup() {
   impostazioniCarica();
+  traguardiInizio();
   collegamentoInizio();
   graficaInizio();
   suoniInizio();
@@ -404,6 +496,7 @@ void loop() {
   collegamentoAggiorna();
   Evento e;
   while ((e = inputLeggi()) != EV_NIENTE) {
+    if (schermata == S_MEDAGLIA) { vai(primaDellaMedaglia); continue; }
     if ((schermata == S_INFO || schermata == S_IN_ARRIVO || schermata == S_ESITO_AGG) && (e == EV_SINISTRA || e == EV_CENTRO)) {
       vai(S_MENU);
       continue;
@@ -420,10 +513,18 @@ void loop() {
       case S_PASSWORD: eventoPassword(e); break;
       case S_CONNESSIONE: eventoConnessione(e); break;
       case S_MENU: eventoMenu(e); break;
+      case S_TRAGUARDI: eventoTraguardi(e); break;
       default: break;
     }
   }
   if (collegamentoChiestoAggiornamento() && schermata == S_MENU) controllaAggiornamenti(true);
+  // traguardi: contatori e medaglie nuove (annunciate solo fuori dalla configurazione iniziale)
+  traguardiAggiorna();
+  if (schermata == S_MEDAGLIA && t() > 5.0f) vai(primaDellaMedaglia);
+  if (schermata == S_MENU || schermata == S_TRAGUARDI) {
+    int n = traguardiNuovaMedaglia();
+    if (n >= 0) { medagliaNuova = n; primaDellaMedaglia = schermata; vai(S_MEDAGLIA); suona(SUONO_TRAGUARDO); }
+  }
   // controllo automatico degli aggiornamenti: una volta per accensione, appena c'e' il Wi-Fi, solo dal menu
   static bool controllato = false;
   if (!controllato && schermata == S_MENU && WiFi.status() == WL_CONNECTED && millis() > 5000) {
@@ -450,6 +551,8 @@ void loop() {
     case S_IN_ARRIVO: disegnaInArrivo(); break;
     case S_NUOVO_FW: disegnaNuovoFw(); break;
     case S_ESITO_AGG: disegnaEsitoAgg(); break;
+    case S_TRAGUARDI: disegnaTraguardi(); break;
+    case S_MEDAGLIA: disegnaMedaglia(); break;
   }
   mostra();
 }
