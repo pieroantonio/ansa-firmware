@@ -1,0 +1,3 @@
+; Copiare in segreti.ini e scegliere una password lunga: serve per gli aggiornamenti via Wi-Fi (OTA) in rete locale.
+[segreti]
+ota_pass = cambiami-con-una-password-lunga

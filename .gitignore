@@ -1,0 +1,6 @@
+# compilazione
+esp32/.pio/
+esp32/build.log
+__pycache__/
+# segreti locali: password degli aggiornamenti via Wi-Fi (OTA). Copiare esp32/segreti.ini.esempio in esp32/segreti.ini
+esp32/segreti.ini
