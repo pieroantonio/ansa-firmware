@@ -7,7 +7,7 @@ LGFX_Sprite tela(&lcd);
 
 void graficaInizio() {
   lcd.init();
-  lcd.setRotation(1);          // orizzontale: 320 x 170
+  lcd.setRotation(3);          // orizzontale: 320 x 170, girato di 180° (come è montato sul fronte, Piero 2026-10-25)
   lcd.setBrightness(0);
   tela.setColorDepth(16);
   tela.createSprite(SCHERMO_L, SCHERMO_A);
