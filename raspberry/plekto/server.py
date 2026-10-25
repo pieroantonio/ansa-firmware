@@ -25,7 +25,8 @@ LATI = ('sup', 'inf')
 NOMI = {'sup': 'superiore', 'inf': 'inferiore'}
 MAX_STL = 80 * 1024 * 1024
 VERSIONE = aggiorna.versione_installata()
-CDN = 'https://cdn.jsdelivr.net/npm/three@0.160.0/'        # se manca la copia locale in static/vendor
+CDN = 'https://cdn.jsdelivr.net/npm/three@0.160.0/'        # se manca la copia locale di three.js
+VENDOR = [os.environ.get('PLEKTO_VENDOR', '/opt/plekto-vendor'), os.path.join(QUI, 'static', 'vendor')]
 
 mac = macchina.Macchina(os.environ.get('PLEKTO_PORTA', '/dev/ttyUSB0'))
 arcate = {}                                                 # lato -> trimesh.Trimesh
@@ -57,9 +58,10 @@ def pagina():
 
 @app.get('/vendor/{percorso:path}')
 def vendor(percorso):
-    locale = os.path.normpath(os.path.join(QUI, 'static', 'vendor', percorso))
-    if locale.startswith(os.path.join(QUI, 'static', 'vendor')) and os.path.isfile(locale):
-        return FileResponse(locale, media_type='text/javascript')
+    for cartella in VENDOR:
+        locale = os.path.normpath(os.path.join(cartella, percorso))
+        if locale.startswith(os.path.normpath(cartella)) and os.path.isfile(locale):
+            return FileResponse(locale, media_type='text/javascript')
     return RedirectResponse(CDN + percorso)
 
 

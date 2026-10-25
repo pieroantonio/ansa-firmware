@@ -13,7 +13,7 @@ Firmware di **Plekto**, piegafilo CNC per retainer ortodontici progettati in dig
 cd esp32
 copy segreti.ini.esempio segreti.ini      (poi scegliere la password OTA)
 pio run -e hw656a -t upload               via cavo USB (tenere premuto BOOT durante "Connecting...")
-pio run -e hw656a_ota -t upload           via Wi-Fi, scheda in rete locale (plekto.local)
+pio run -e hw656a_ota -t upload           via Wi-Fi, scheda in rete locale (plekto-esp.local)
 ```
 
 ## Aggiornamenti da internet

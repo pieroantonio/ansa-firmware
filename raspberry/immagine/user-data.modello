@@ -1,0 +1,17 @@
+#cloud-config
+# Primo avvio del Raspberry di Plekto. crea_immagine.py sostituisce {CHIAVE_SSH} con la chiave pubblica di Piero.
+hostname: plekto
+manage_etc_hosts: true
+timezone: Europe/Rome
+users:
+  - name: piero
+    groups: users,adm,dialout,audio,netdev,video,plugdev,input,gpio,spi,i2c,render,sudo
+    shell: /bin/bash
+    lock_passwd: true
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    ssh_authorized_keys:
+      - {CHIAVE_SSH}
+enable_ssh: true
+ssh_pwauth: false
+runcmd:
+  - [bash, /boot/firmware/plekto/primo-avvio.sh]

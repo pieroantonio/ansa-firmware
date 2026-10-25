@@ -1,0 +1,8 @@
+# Plekto: al primo avvio solo il cavo di rete (facoltativo).
+# Il Wi-Fi lo imposta il software di Plekto con la stessa rete scelta sul display della macchina (arriva via USB).
+network:
+  version: 2
+  ethernets:
+    eth0:
+      dhcp4: true
+      optional: true

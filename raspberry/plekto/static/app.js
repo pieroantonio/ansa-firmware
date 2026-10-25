@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { STLLoader } from 'three/addons/loaders/STLLoader.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
+import { t, t as tr, impostaLingua } from './lingua.js';
 
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -12,7 +13,7 @@ const PASSI = ['Clicca il dente di inizio', 'Clicca il dente di fine', 'Clicca i
 
 function avviso(testo, ms = 3200) {
   const a = $('#avviso');
-  a.textContent = testo;
+  a.textContent = t(testo);
   a.classList.add('su');
   clearTimeout(avviso.t);
   avviso.t = setTimeout(() => a.classList.remove('su'), ms);
@@ -184,9 +185,9 @@ function aggiornaTessera(lato, info, caricando) {
   const t = $(`.arcata[data-lato="${lato}"]`);
   t.classList.toggle('caricata', !!info);
   t.classList.toggle('carica', !!caricando);
-  $('.dett', t).textContent = caricando ? 'Caricamento' : info
-    ? `${info.misure.slice(0, 2).join(' × ')} mm · ${(info.facce / 1000).toFixed(0)}k facce`
-    : "Trascina l'STL o fai clic";
+  $('.dett', t).textContent = caricando ? tr('Caricamento') : info
+    ? `${info.misure.slice(0, 2).join(' × ')} mm · ${tr('{n}k facce', { n: (info.facce / 1000).toFixed(0) })}`
+    : tr("Trascina l'STL o fai clic");
 }
 
 async function caricaFile(lato, file) {
@@ -259,11 +260,11 @@ function aggiornaScelte() {
   la.innerHTML = '';
   if (lati.length > 1) for (const l of lati) {
     const b = document.createElement('button');
-    b.textContent = l === 'sup' ? 'Sup' : 'Inf';
+    b.textContent = t(l === 'sup' ? 'Sup' : 'Inf');
     b.classList.toggle('attivo', l === stato.attivo);
     b.addEventListener('click', () => { stato.attivo = l; aggiornaScelte(); });
     la.append(b);
-  } else if (lati[0]) la.textContent = NOMI[lati[0]];
+  } else if (lati[0]) la.textContent = t(NOMI[lati[0]]);
   aggiornaMateriali();
   aggiornaPassi();
   mostraVerifica();
@@ -274,8 +275,8 @@ function aggiornaPassi() {
   const n = stato.attivo ? stato.punti[stato.attivo].length : -1;
   $$('#passi li').forEach((li, i) => { li.classList.toggle('fatto', i < n); li.classList.toggle('ora', i === n); });
   const aiuto = $('#aiutoVista');
-  if (!Object.keys(stato.mesh).length) aiuto.textContent = 'Trascina qui gli STL delle arcate';
-  else if (n >= 0 && n < 3) aiuto.textContent = `${PASSI[n]} · arcata ${NOMI[stato.attivo]}`;
+  if (!Object.keys(stato.mesh).length) aiuto.textContent = t('Trascina qui gli STL delle arcate');
+  else if (n >= 0 && n < 3) aiuto.textContent = `${t(PASSI[n])} · ${t('arcata ' + NOMI[stato.attivo])}`;
   else aiuto.textContent = '';
   tela.classList.toggle('scegli', n >= 0 && n < 3);
 }
@@ -332,7 +333,7 @@ function disegnaPunti(lato) {
 }
 
 async function progetta(lato) {
-  $('#aiutoVista').textContent = 'Calcolo del retainer…';
+  $('#aiutoVista').textContent = t('Calcolo del retainer…');
   try {
     stato.progetto[lato] = await api('POST', `/api/progetta/${lato}`, { punti: stato.punti[lato] });
   } catch (e) {
@@ -356,17 +357,20 @@ function mostraVerifica() {
   const es = $('#esito');
   es.className = 'esito';
   if (!p.antagonista) {
-    es.innerHTML = '<b>Contatti non controllati</b>Carica anche l\'arcata antagonista in occlusione.';
+    es.innerHTML = `<b>${t('Contatti non controllati')}</b>${t("Carica anche l'arcata antagonista in occlusione.")}`;
   } else if (!p.contatti.length) {
     es.classList.add('ok');
-    es.innerHTML = `<b>Nessun contatto con l'antagonista</b>Gioco minimo ${p.gioco_min.toFixed(2)} mm dalla superficie del filo.`;
+    es.innerHTML = `<b>${t("Nessun contatto con l'antagonista")}</b>${t('Gioco minimo {g} mm dalla superficie del filo.', { g: p.gioco_min.toFixed(2) })}`;
   } else {
     es.classList.add('male');
-    es.innerHTML = `<b>Contatto con l'antagonista</b>${p.suggerimento.testo}.`;
+    const sug = p.suggerimento.sposta_mm != null
+      ? t('Sposta il retainer di {s} mm verso la gengiva: spariscono i contatti.', { s: p.suggerimento.sposta_mm.toFixed(2) })
+      : t('Contatti anche spostando di 3 mm: cambia inclinazione (punto centrale) o accorcia il retainer.');
+    es.innerHTML = `<b>${t("Contatto con l'antagonista")}</b>${sug}`;
     if (p.suggerimento.vettore) {
       const b = document.createElement('button');
       b.className = 'bottone primario';
-      b.textContent = `Sposta di ${p.suggerimento.sposta_mm.toFixed(2)} mm`;
+      b.textContent = t('Sposta di {s} mm', { s: p.suggerimento.sposta_mm.toFixed(2) });
       b.addEventListener('click', () => {
         const v = p.suggerimento.vettore;
         stato.punti[lato] = stato.punti[lato].map(q => q.map((x, i) => x + v[i]));
@@ -401,18 +405,22 @@ async function aggiornaMacchina() {
   ultimoStato = s;
   const on = s.collegata;
   $('#statoBarra').classList.toggle('on', on);
-  $('#statoBarra span').textContent = on ? 'Macchina collegata' : 'Macchina non collegata';
-  $('#mSotto').textContent = on ? 'Collegata via USB' : 'Non collegata: controlla il cavo USB';
+  if (impostaLingua(s.lingua)) {                     // lingua scelta sul display della macchina
+    aggiornaScelte();
+    for (const l of ['sup', 'inf']) aggiornaTessera(l, stato.info[l]);
+  }
+  $('#statoBarra span').textContent = t(on ? 'Macchina collegata' : 'Macchina non collegata');
+  $('#mSotto').textContent = t(on ? 'Collegata via USB' : 'Non collegata: controlla il cavo USB');
   const e = s.esp || {};
-  const segnale = e.rssi ? (e.rssi > -60 ? 'ottimo' : e.rssi > -70 ? 'buono' : 'debole') + ` (${e.rssi} dBm)` : '–';
+  const segnale = e.rssi ? t(e.rssi > -60 ? 'ottimo' : e.rssi > -70 ? 'buono' : 'debole') + ` (${e.rssi} dBm)` : '–';
   righe($('#mRighe'), [
     ['Firmware', e.fw || '–'],
-    ['Wi-Fi', s.wifi ? `${s.wifi}${e.ip ? ' · ' + e.ip : ''}` : 'non configurato'],
-    ['Segnale', segnale],
-    ['Rotella', e.ano === undefined ? '–' : e.ano ? 'collegata' : 'non trovata'],
-    ['Acceso da', e.s ? durata(e.s) : '–'],
+    ['Wi-Fi', s.wifi ? `${s.wifi}${e.ip ? ' · ' + e.ip : ''}` : t('non configurato')],
+    [t('Segnale'), segnale],
+    [t('Rotella'), e.ano === undefined ? '–' : t(e.ano ? 'collegata' : 'non trovata')],
+    [t('Acceso da'), e.s ? durata(e.s) : '–'],
   ]);
-  $('#mFirmware').textContent = e.fw ? `Versione installata ${e.fw}` : '–';
+  $('#mFirmware').textContent = e.fw ? t('Versione installata {v}', { v: e.fw }) : '–';
   $$('#lingua button').forEach(b => b.classList.toggle('attivo', b.dataset.l === s.lingua));
   if (document.activeElement !== $('#luci') && e.luci !== undefined) {
     $('#luci').value = e.luci;
@@ -435,7 +443,7 @@ $('#luci').addEventListener('input', e => {
 });
 $('#provaSuono').addEventListener('click', () => comando('suono', { hz: 1760, ms: 150 }));
 $('#aggEsp').addEventListener('click', () => { comando('agg'); avviso('Controllo in corso: guarda il display della macchina'); });
-$('#riavviaEsp').addEventListener('click', () => { if (confirm('Riavviare la macchina?')) comando('riavvia'); });
+$('#riavviaEsp').addEventListener('click', () => { if (confirm(t('Riavviare la macchina?'))) comando('riavvia'); });
 $$('#lingua button').forEach(b => b.addEventListener('click', async () => {
   try { await api('POST', '/api/impostazioni', { lingua: b.dataset.l }); aggiornaMacchina(); } catch (e) { avviso(e.message); }
 }));
@@ -443,29 +451,29 @@ $$('#lingua button').forEach(b => b.addEventListener('click', async () => {
 // ================================================================================================ sistema
 async function caricaSistema() {
   const pi = (ultimoStato && ultimoStato.pi) || {};
-  righe($('#sRighe'), [['Versione', pi.versione || '–'], ['Indirizzo', pi.ip ? `http://${pi.ip}` : '–']]);
+  righe($('#sRighe'), [[t('Versione'), pi.versione || '–'], [t('Indirizzo'), pi.ip ? `http://${pi.ip}` : '–']]);
 }
 $('#sControlla').addEventListener('click', async () => {
-  $('#sNota').textContent = 'Controllo…';
+  $('#sNota').textContent = t('Controllo…');
   try {
     const r = await api('GET', '/api/sistema/aggiornamenti');
-    righe($('#sRighe'), [['Versione installata', r.attuale], ['Ultima versione', r.ultima || '–'],
-      ...(r.ultimo_esito ? [['Ultimo aggiornamento', `${r.ultimo_esito.esito} · ${r.ultimo_esito.quando}`]] : [])]);
+    righe($('#sRighe'), [[t('Versione installata'), r.attuale], [t('Ultima versione'), r.ultima || '–'],
+      ...(r.ultimo_esito ? [[t('Ultimo aggiornamento'), `${r.ultimo_esito.esito} · ${r.ultimo_esito.quando}`]] : [])]);
     $('#sAggiorna').hidden = !r.nuova;
-    $('#sAggiorna').textContent = `Aggiorna a ${r.ultima}`;
-    $('#sNota').textContent = r.nuova ? 'È disponibile una versione nuova.' : 'Il software è aggiornato.';
-  } catch (e) { $('#sNota').textContent = e.message; }
+    $('#sAggiorna').textContent = t('Aggiorna a {v}', { v: r.ultima });
+    $('#sNota').textContent = t(r.nuova ? 'È disponibile una versione nuova.' : 'Il software è aggiornato.');
+  } catch (e) { $('#sNota').textContent = t(e.message); }
 });
 $('#sAggiorna').addEventListener('click', async () => {
   const prima = (await api('GET', '/api/salute').catch(() => ({}))).versione;
   try { await api('POST', '/api/sistema/aggiorna'); } catch (e) { return avviso(e.message); }
   $('#sAggiorna').disabled = true;
-  $('#sNota').textContent = 'Aggiornamento in corso: non spegnere. La pagina si ricarica da sola.';
+  $('#sNota').textContent = t('Aggiornamento in corso: non spegnere. La pagina si ricarica da sola.');
   const inizio = Date.now();
   const t = setInterval(async () => {
     const s = await api('GET', '/api/salute').catch(() => null);
     if (s && s.versione !== prima) { clearInterval(t); location.reload(); }
-    if (Date.now() - inizio > 5 * 60000) { clearInterval(t); $('#sNota').textContent = 'Aggiornamento non riuscito: è rimasta la versione di prima.'; $('#sAggiorna').disabled = false; }
+    if (Date.now() - inizio > 5 * 60000) { clearInterval(t); $('#sNota').textContent = t('Aggiornamento non riuscito: è rimasta la versione di prima.'); $('#sAggiorna').disabled = false; }
   }, 3000);
 });
 
