@@ -21,6 +21,8 @@ TOLL_PIEGHE = 0.10           # mm: scarto massimo tra la curva e la spezzata rea
 TRATTO_MIN = 1.5             # mm: tratto dritto minimo tra due pieghe (⚠ ipotesi, da misurare sulla testa di piega)
 ANGOLO_MIN = 1.0             # gradi: pieghe più piccole vengono unite al tratto
 ARRIVO_LIBERO = 1.0          # mm: ultimo tratto verso il punto cliccato in cui il filo può toccare il dente (fossa)
+SEGNO_TAGLIO = 90.0          # gradi: piega che segna dove tagliare, all'inizio e alla fine del retainer
+SPORGENZA_TAGLIO = 3.5       # mm: avanzamento finale, la piega di fine esce dalla testa e si taglia comodo
 N_RAGGI = 900
 
 
@@ -202,14 +204,25 @@ def _pieghe(spezzata):
 
 def gcode(passi, nome='retainer'):
     """G-code semplice per l'interprete dell'ESP32: G1 L = avanzamento del filo, B = piega nel piano.
-    La compensazione del ritorno elastico e dell'abbassamento per gravità la aggiunge la taratura (in arrivo)."""
-    righe = ['; Plekto - %s' % nome, '; filo %.4f mm, %d pieghe' % (D_FILO, sum(1 for p in passi if p['piega'])),
-             'G21', 'G91']
+    La compensazione del ritorno elastico e dell'abbassamento per gravità la aggiunge la taratura (in arrivo).
+    Segni di taglio (Piero, 2026-10-26): una piega a 90° all'inizio e alla fine dice esattamente dove tagliare col
+    tronchesino; alla fine il filo avanza di SPORGENZA_TAGLIO mm, così la piega esce dalla testa e si taglia comodo.
+    Il moncone che resta sul filo dopo il taglio (SPORGENZA_TAGLIO mm) fa da attacco per la piega iniziale del
+    retainer successivo: per questo all'inizio non si avanza (dopo aver caricato un filo nuovo, lasciarlo sporgere di
+    SPORGENZA_TAGLIO mm)."""
+    pieghe = [p['piega'] for p in passi if p['piega']]
+    segno = -1.0 if pieghe and pieghe[0] > 0 else 1.0           # gambetta di scarto verso l'esterno dell'arco
+    righe = ['; Plekto - %s' % nome, '; filo %.4f mm, %d pieghe + 2 segni di taglio a %d gradi'
+             % (D_FILO, len(pieghe), SEGNO_TAGLIO), 'G21', 'G91',
+             'B%.1f ; segno di taglio iniziale: tagliare sullo spigolo' % (segno * SEGNO_TAGLIO)]
     for p in passi:
         righe.append('G1 L%.2f' % p['avanza'])
         if p['piega']:
             righe.append('B%.1f' % p['piega'])
-    righe.append('M5 ; taglio')
+    segno = -1.0 if pieghe and pieghe[-1] > 0 else 1.0
+    righe += ['B%.1f ; segno di taglio finale: tagliare sullo spigolo' % (segno * SEGNO_TAGLIO),
+              'G1 L%.2f ; sporgenza: lo spigolo esce dalla testa' % SPORGENZA_TAGLIO,
+              'M5 ; fine: tagliare ai due segni']
     return '\n'.join(righe) + '\n'
 
 
